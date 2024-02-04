@@ -14,7 +14,7 @@
 
 ## Project Structure
 - `main.py`: Main code for house price prediction.
-- `model.joblib`: Saved machine learning model.
+- `model.pkl`: Saved machine learning model.
 - `data/`: Directory containing your dataset.
 
 
