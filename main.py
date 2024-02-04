@@ -1,64 +1,57 @@
 #import necessary libraries
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error
 import pandas as pd
-import joblib
+import numpy as np
+import streamlit as st
 
-#load your dataset
-file_path = 'House_details.csv'
-data = pd.read_csv(file_path)
+#loading the data
+data = pd.read_csv("C:\\Users\\madih\\OneDrive\\Desktop\\\Zrock\House_details.csv")
 
-def preprocess_data(data, target_column):
- categorical_columns = data.select_dtypes(include=['object']).columns
- data_encoded = pd.get_dummies(data, columns=categorical_columns)
+#Define features X and target variable y
+X = data[['area','num_rooms','location','year_built']]
+y = data['Price']
 
- #Define features X and target variable y
- X = data_encoded.drop(columns=target_column)
- y = data_encoded[target_column]
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.linear_model import LinearRegression
+from sklearn.compose import make_column_transformer
+from sklearn.pipeline import make_pipeline
+from sklearn.metrics import r2_score
 
- return X, y
+ohe = OneHotEncoder()
+ohe.fit(X[['area','num_rooms','location','year_built']])
 
-def train_and_evaluate(X_train, X_test, y_train, y_test):
- #initialise the linear regression model
- model = LinearRegression()
+column_trans = make_column_transformer((OneHotEncoder
+                                        (handle_unknown='ignore'),['area','num_rooms','location','year_built']),
+                                        remainder='passthrough')
 
- #Train the model
- model.fit(X_train, y_train)
+lr = LinearRegression()
+pipe = make_pipeline(column_trans,lr)
+pipeline = make_pipeline(column_trans,lr)
+pipe.fit(X_train, y_train)
+y_pred = pipe.predict(X_test)
+r2_score(y_test, y_pred)
 
- #make predictions on the test set
- predictions = model.predict(X_test)
+import pickle
+pickle.dump(pipe,open('LinearRegressionModel.pkl','wb'))
+pipe.predict(pd.DataFrame(columns=['area','num_rooms','location','year_built'],
+                          data = np.array([2000,6,'AP',2001]).reshape(1,4)))
+pipe.steps[0][1].transformers[0][1].categories[0]
 
- #evaluate the performance of the model
- mse = mean_squared_error(y_test, predictions)
- print(f'Mean Squared Error: {mse}')
+#streamlit app
+st.title('House Price Prediction System')
 
- #save the trained model to a file
- joblib.dump(model, 'linear_regression_model.joblib')
+#sidebar for using input
+area = st.selectbox('select the area:', data['area'].unique())
+num_rooms = st.selectbox('select the num_rooms:', data['num_rooms'].unique())
+location = st.selectbox('select the area:', data['location'].unique())
+year_built = st.selectbox('select the year_built:', data['year_built'].unique())
+predicted_price = pipeline.predict(data)[0]
 
-def predict_price(input_features):
- model = joblib.load('linear_regression_model.joblib')
+#Button to trigger prediction
+if st.button('Predict Price'):
+    predicted_price = pipeline.predict(data)[0]
 
- prediction = model.predict([input_features])
 
- return prediction[0]
-
-if __name__=="__main__":
-
- #preprocess data
- target_column = 'Price'
- X, y = preprocess_data(data, target_column)
-
- #split the data into training and testing sets
- X_train, X_test, y_train, y_test = train_test_split(X, y,test_size=0.2,random_state=42)
-
- #train and evaluate the model
- train_and_evaluate(X_train, X_test, y_train, y_test)
-
- #Example: Predict the price using the trained model
- input_features =[1000, 3, 'delhi',...]
-
- #Replace the actual values
- predicted_price = predict_price(input_features)
- print(f'Predicted Price: {predicted_price}')
-
+#display the prediction
+st.write(f'Predicted Price: {predicted_price}')
