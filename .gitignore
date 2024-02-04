@@ -1,0 +1,24 @@
+#  .gitignore
+
+#  Virtual Environment
+venv/
+venv.*
+
+#  Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+#  Compiled python modules
+*.pyc
+
+#  Compiled C extension
+*.so
+
+#  Exclude any logs
+*.log
+
+#  Exclude model files
+*.joblib
+
