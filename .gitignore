@@ -20,5 +20,5 @@ __pycache__/
 *.log
 
 #  Exclude model files
-*.joblib
+*.pkl
 
